@@ -1,0 +1,6 @@
+/target/
+.project
+.classpath
+/.settings/
+/safecheckout.log.lck
+.DS_Store
