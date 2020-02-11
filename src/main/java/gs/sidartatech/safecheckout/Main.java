@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -25,17 +26,32 @@ import org.jutils.jprocesses.JProcesses;
 import gs.sidartatech.safecheckout.api.AppVersionAPI;
 import gs.sidartatech.safecheckout.api.AuthenticationAPI;
 import gs.sidartatech.safecheckout.domain.AppVersion;
+import gs.sidartatech.safecheckout.domain.ControlExecution;
+import gs.sidartatech.safecheckout.domain.Routine;
+import gs.sidartatech.safecheckout.domain.RoutineSituation;
 import gs.sidartatech.safecheckout.service.AppService;
 import gs.sidartatech.safecheckout.service.AppVersionService;
+import gs.sidartatech.safecheckout.service.ControlExecutionService;
+import gs.sidartatech.safecheckout.service.RoutineService;
+import gs.sidartatech.safecheckout.service.RoutineSituationService;
 import gs.sidartatech.safecheckout.service.ServiceFactory;
 
 public class Main {
 	private static Logger logger = Logger.getLogger(Main.class.getName());
 	public static final String API_URL = "http://127.0.0.1:9797/safe-checkout/api/";
+	private static final Integer ROUTINE_ID = 1;
 	public static String token = "";
 	public static String versionPath;
 	public static String appPath;
+	private static RoutineService routineService;
+	private static RoutineSituationService routineSituationService;
+	private static ControlExecutionService controlExecutionService;
+	
 	public static void main(String[] args) {
+		boolean endOK = true;
+		ControlExecution controlExecution = null;
+		String routineName = "";
+		String messageError = "";
 		try {
 			InputStream is = Main.class.getResourceAsStream("/logging.properties");
 			LogManager.getLogManager().readConfiguration(is);
@@ -47,6 +63,19 @@ public class Main {
 	        fh.setFormatter(sf);
 	        Logger.getLogger("").addHandler(fh);
 	        logger.log(Level.INFO, "Starting Safe-CheckOut");
+	        
+	        routineService = ServiceFactory.getInstance().getRoutineService();
+	        Routine routine = routineService.getByKey(ROUTINE_ID);
+	        routineName = routine.getRoutineName();
+	        routineSituationService = ServiceFactory.getInstance().getRoutineSituationService();
+	        RoutineSituation routineSituation = routineSituationService.getByKey(2);
+	        controlExecution = new ControlExecution();
+	        controlExecution.setRoutine(routine);
+	        controlExecution.setRoutineSituation(routineSituation);
+	        controlExecution.setStartTime(new Date());
+	        controlExecution.setDescription("Starting Routine: " + routine.getRoutineName());
+	        controlExecutionService = ServiceFactory.getInstance().getControlExecutionService();
+	        controlExecution = controlExecutionService.saveWithReturn(controlExecution);
 	        logger.log(Level.INFO, "Connect to Server...");
 	        AuthenticationAPI authenticationAPI = new AuthenticationAPI();
 	        authenticationAPI.authentication();
@@ -148,22 +177,53 @@ public class Main {
 			    	        re.exec(actualArgs.toArray(new String[0]));
 			    	        logger.log(Level.INFO, "Starting new Version...(OK)");
 			    	    } catch (Exception e) {
+			    	    	messageError = e.getMessage();
+			    	    	endOK = false;
 			    	    	logger.log(Level.SEVERE, e.getMessage(), e);
 			    	    }
 			    	}catch(IOException e){
+			    		endOK = false;
+			    		messageError = e.getMessage();
 			    		logger.log(Level.SEVERE, e.getMessage(), e);
 			    	}
-					
 				}
 			} catch (FileNotFoundException e) {
+				endOK = false;
+				messageError = e.getMessage();
 				logger.log(Level.SEVERE, e.getMessage(), e);
 			} catch (IOException e) {
+				endOK = false;
+				messageError = e.getMessage();
 				logger.log(Level.SEVERE, e.getMessage(), e);
 			}
 	        logger.log(Level.INFO, "Checking Current Version...(OK)");
 	        logger.log(Level.INFO, "Stop Safe-CheckOut");
 		} catch (SecurityException | IOException e) {
+			endOK = false;
+			messageError = e.getMessage();
 			logger.log(Level.SEVERE, e.getMessage(), e);
 		}
+		
+		if (endOK) {
+			stopOK(controlExecution, routineName);
+		} else {
+			stopNOK(controlExecution, messageError);
+		}
+	}
+	
+	private static void stopOK(ControlExecution controlExecution, String routineName) {
+		RoutineSituation routineSituation = routineSituationService.getByKey(1);
+        controlExecution.setRoutineSituation(routineSituation);
+        controlExecution.setEndTime(new Date());
+        controlExecution.setDescription("Routine: " + routineName + " END OK");
+        controlExecutionService.update(controlExecution);
+	}
+	
+	private static void stopNOK(ControlExecution controlExecution, String message) {
+		RoutineSituation routineSituation = routineSituationService.getByKey(1);
+        controlExecution.setRoutineSituation(routineSituation);
+        controlExecution.setEndTime(new Date());
+        controlExecution.setDescription(message);
+        controlExecutionService.update(controlExecution);
 	}
 }

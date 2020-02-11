@@ -2,6 +2,9 @@ package gs.sidartatech.safecheckout.service;
 
 public class ServiceFactory {
 	private static ServiceFactory instance;
+	private RoutineService routineService;
+	private RoutineSituationService routineSituationService;
+	private ControlExecutionService controlExecutionService;
 	private AppService appService;
 	private AppVersionService appVersionService;
 	
@@ -14,6 +17,27 @@ public class ServiceFactory {
 			instance = new ServiceFactory();
 		}
 		return instance;
+	}
+	
+	public RoutineService getRoutineService() {
+		if(routineService == null) {
+			routineService = new RoutineService();
+		}
+		return routineService;
+	}
+	
+	public RoutineSituationService getRoutineSituationService() {
+		if(routineSituationService == null) {
+			routineSituationService = new RoutineSituationService();
+		}
+		return routineSituationService;
+	}
+	
+	public ControlExecutionService getControlExecutionService() {
+		if(controlExecutionService == null) {
+			controlExecutionService = new ControlExecutionService();
+		}
+		return controlExecutionService;
 	}
 	
 	public AppService getAppService() {
