@@ -3,6 +3,8 @@ package gs.sidartatech.safecheckout.persistence.jdbc;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,9 +20,11 @@ public class AppJDBC extends AbstractJDBC implements PersistenceDAO<Integer, App
 	private final String INSERT_SQL_FILE = "insertApp.sql";
 	private final String UPDATE_SQL_FILE = "updateApp.sql";
 	private final String SELECT_SQL_FILE = "selectApp.sql";
+	private final String SELECT_ALL_SQL_FILE = "selectAllApp.sql";
 	private String sqlInsert;
 	private String sqlUpdate;
 	private String sqlSelect;
+	private String sqlSelectAll;
 	
 	public AppJDBC() {
 		super();
@@ -39,6 +43,8 @@ public class AppJDBC extends AbstractJDBC implements PersistenceDAO<Integer, App
 				a = new App();
 				a.setAppId(rs.getInt("app_id"));
 				a.setAppName(rs.getString("app_name"));
+				a.setFileName(rs.getString("file_name"));
+				a.setReplaceNow(rs.getString("replace_now"));
 			}
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, e.getMessage(), e);
@@ -55,6 +61,8 @@ public class AppJDBC extends AbstractJDBC implements PersistenceDAO<Integer, App
 		try (PreparedStatement ps = con.prepareStatement(sqlInsert)){
 			ps.setInt(1, app.getAppId());
 			ps.setString(2, app.getAppName());
+			ps.setString(3, app.getFileName());
+			ps.setString(4, app.getReplaceNow());
 			ps.executeUpdate();
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, e.getMessage(), e);
@@ -69,7 +77,9 @@ public class AppJDBC extends AbstractJDBC implements PersistenceDAO<Integer, App
 		
 		try (PreparedStatement ps = con.prepareStatement(sqlUpdate)){
 			ps.setString(1, app.getAppName());
-			ps.setInt(2, app.getAppId());
+			ps.setString(2, app.getFileName());
+			ps.setString(3, app.getReplaceNow());
+			ps.setInt(4, app.getAppId());
 			ps.executeUpdate();
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, e.getMessage(), e);
@@ -78,6 +88,23 @@ public class AppJDBC extends AbstractJDBC implements PersistenceDAO<Integer, App
 
 	@Override
 	public List<App> getAll() {
-		return null;
+		if(sqlSelectAll == null) {
+			sqlSelectAll = ReadFile.readSqlFile(SELECT_ALL_SQL_FILE);
+		}
+		List<App> list = new ArrayList<App>();
+		try(Statement s = con.createStatement()) {
+			ResultSet rs = s.executeQuery(sqlSelectAll);
+			while(rs.next()) {
+				App app = new App();
+				app.setAppId(rs.getInt("app_id"));
+				app.setAppName(rs.getString("app_name"));
+				app.setFileName(rs.getString("file_name"));
+				app.setReplaceNow(rs.getString("replace_now"));
+				list.add(app);
+			}
+		} catch (SQLException e) {
+			logger.log(Level.SEVERE, e.getMessage(), e);
+		}
+		return list;
 	}
 }

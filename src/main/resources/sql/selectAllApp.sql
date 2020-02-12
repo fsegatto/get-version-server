@@ -3,4 +3,3 @@ SELECT app_id     ,
        file_name  ,
        replace_now
   FROM sctb012_app
- WHERE app_id = ?
