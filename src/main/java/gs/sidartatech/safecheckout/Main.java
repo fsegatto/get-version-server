@@ -42,7 +42,7 @@ public class Main {
 	private static Logger logger = Logger.getLogger(Main.class.getName());
 	public static final String API_URL = "http://191.252.191.40:9797/safe-checkout/api/";
 	private static final Integer ROUTINE_ID = 1;
-	private static final String VERSION = "1.0.0.1";
+	private static final String VERSION = "1.1.0.1";
 	public static String token = "";
 	public static String versionPath;
 	public static String appPath;
@@ -65,7 +65,7 @@ public class Main {
 	        SimpleFormatter sf = new SimpleFormatter();
 	        fh.setFormatter(sf);
 	        Logger.getLogger("").addHandler(fh);
-	        logger.log(Level.INFO, "Starting Safe-CheckOut");
+	        logger.log(Level.INFO, "Starting Safe-CheckOut Get Version");
 	        
 	        logger.log(Level.INFO, "Remove File Version...");
 			File versionFile = new File(versionPath + "/get-version.txt");
@@ -262,7 +262,7 @@ public class Main {
 				logger.log(Level.SEVERE, e.getMessage(), e);
 			}
 	        logger.log(Level.INFO, "Checking Current Version...(OK)");
-	        logger.log(Level.INFO, "Stop Safe-CheckOut");
+	        logger.log(Level.INFO, "Stop Safe-CheckOut Get Version");
 		} catch (SecurityException | IOException e) {
 			endOK = false;
 			messageError = e.getMessage();
