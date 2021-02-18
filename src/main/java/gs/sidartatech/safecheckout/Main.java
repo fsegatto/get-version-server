@@ -40,7 +40,7 @@ import gs.sidartatech.safecheckout.service.ServiceFactory;
 
 public class Main {
 	private static Logger logger = Logger.getLogger(Main.class.getName());
-	public static final String API_URL = "http://191.252.222.32:9797/safe-checkout/api/";
+	public static final String API_URL = "http://191.252.191.40:9797/safe-checkout/api/";
 	private static final Integer ROUTINE_ID = 1;
 	private static final String VERSION = "1.0.0.1";
 	public static String token = "";
